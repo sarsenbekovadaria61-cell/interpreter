@@ -1,0 +1,5 @@
+mysh
+*.o
+__pycache__/
+*.log
+tests/test_shell

@@ -1,47 +1,12 @@
 #ifndef LEXER_H
 #define LEXER_H
 #include <stddef.h>
+typedef enum { T_END, T_WORD, T_PIPE, T_BG, T_SEMI, T_AND, T_OR,
+               T_LP, T_RP, T_IN, T_OUT, T_APPEND } TokenKind;
+typedef struct { TokenKind kind; char *text; int quoted, assignment; } Token;
+typedef struct { Token *v; size_t n; } Tokens;
 
-typedef enum {
-    TOKEN_WORD,
-    TOKEN_PIPE,         
-    TOKEN_REDIRECT_IN,  
-    TOKEN_REDIRECT_OUT, 
-    TOKEN_EOF,
-    TOKEN_BACKGROUND,
-    TOKEN_SEMICOLON,
-    TOKEN_AND,
-    TOKEN_OR,
-    TOKEN_LPAREN,
-    TOKEN_RPAREN,
-    TOKEN_REDIRECT_APPEND,
-    TOKEN_NEWLINE
-} TokenKind;
-
-typedef struct {
-    TokenKind kind;
-    char *lexeme;
-} Token;
-
-typedef enum {
-    LEXER_OK,
-    LEXER_INCOMPLETE,
-    LEXER_ERROR,
-    LEXER_NO_MEMORY
-} LexerStatus;
-
-typedef struct {
-    Token *tokens;
-    size_t count;
-    size_t capacity;
-    LexerStatus status;
-    const char *error;  
-} TokenList;
-
-
-TokenList lexer_tokenize(const char *input);
-void token_list_free(TokenList *list);
-const char *token_kind_name(TokenKind kind);
-
-
+int lex(const char *input, Tokens *out);
+void tokens_free(Tokens *t);
+void tokens_dump(const Tokens *t);
 #endif
