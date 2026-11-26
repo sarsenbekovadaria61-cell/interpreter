@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 extern char **environ;
-/* execve, unlike execvp, never silently interprets ENOEXEC files as scripts. */
+
 static int external(char *const *argv) {
     if (!argv[0][0]) { error("command","empty command name"); return 127; }
     if (strchr(argv[0],'/')) {
@@ -53,7 +53,6 @@ static void child_run(Shell *sh, const Node *n) {
     else if (n->kind==N_SUB) result=execute(sh,n->left);
     else result=execute(sh,n);
     if (fflush(stdout)==EOF) result=1;
-    /* The fork snapshot is discarded with _exit; it is not a parent leak. */
     jobs_dispose(&sh->jobs,1);
     if (close_fd(STDIN_FILENO)<0) result=1;
     if (close_fd(STDOUT_FILENO)<0) result=1;
@@ -78,7 +77,6 @@ static int launch(Shell *sh, const Node *n, int bg) {
             if (setpgid(0,child_group)<0) { syserr("setpgid"); _exit(126); }
             if (signals_child()<0) _exit(126);
             close_fd(gate[1]);
-            /* Parent releases all children after group creation and tcsetpgrp. */
             char byte; ssize_t r;
             do { r=read(gate[0],&byte,1); } while (r<0 && errno==EINTR);
             if (r<0) { syserr("read"); _exit(126); }
@@ -146,7 +144,7 @@ int execute(Shell *sh, const Node *n) {
             SavedFDs saved;
             if (!n->redirs) {
                 r=builtin(sh,n->argv,n->argc);
-                /* Publish output before a later wait or background child writes. */
+
                 if (fflush(stdout)==EOF) { syserr("stdout"); r=1; }
             }
             else if (redirs_save(&saved)<0) r=1;
@@ -156,7 +154,6 @@ int execute(Shell *sh, const Node *n) {
             }
             break;
         }
-        /* fall through */
     case N_PIPE: case N_SUB: r=launch(sh,n,0); break;
     }
     sh->status=r; return r;
