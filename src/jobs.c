@@ -174,7 +174,6 @@ void jobs_dispose(Jobs *j, int terminate) {
     while (j->head) {
         Job *x=j->head;
         if (terminate && job_state(x)!=DONE) {
-            /* Bounded shutdown: no inherited background child survives the shell. */
             if (x->pgid != getpgrp()) {
                 if (kill(-x->pgid,SIGKILL)<0 && errno!=ESRCH) syserr("kill");
             } else {
